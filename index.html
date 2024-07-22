@@ -16,21 +16,23 @@
     #signatureCanvas {
       border: 1px solid #000;
       touch-action: none;
-      width: 500px; /* Fixed width */
-      height: 200px; /* Fixed height */
+      width: 80vw; /* Adjusted width for larger screen */
+      height: 40vh; /* Adjusted height for larger screen */
+      max-width: 800px; /* Maximum width */
+      max-height: 400px; /* Maximum height */
     }
     .button {
       margin-top: 10px;
-      padding: 20px 40px;
-      font-size: 24px;
+      padding: 20px 50px; /* Larger padding for bigger buttons */
+      font-size: 28px; /* Larger font size */
       cursor: pointer;
       width: 90%;
-      max-width: 400px;
+      max-width: 500px; /* Adjusted max width */
       text-align: center;
     }
     #output {
       width: 100%;
-      max-width: 400px;
+      max-width: 500px; /* Adjusted max width */
       margin-top: 10px;
       font-size: 16px;
     }
@@ -46,7 +48,6 @@
   <button id="copyButton" class="button">Copy</button>
   <script>
     const canvas = document.getElementById('signatureCanvas');
-    const context = canvas.getContext('2d');
     const signaturePad = new SignaturePad(canvas, {
       backgroundColor: 'rgb(255, 255, 255)'
     });
@@ -61,6 +62,7 @@
     }
 
     function drawSignatureLine() {
+      const context = canvas.getContext('2d');
       context.beginPath();
       context.moveTo(0, canvas.height / 2);
       context.lineTo(canvas.width, canvas.height / 2);
