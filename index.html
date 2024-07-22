@@ -39,15 +39,26 @@
       padding: 10px; /* Padding for better readability */
       box-sizing: border-box;
     }
+
+    /* Styles for Safari */
+    @media not all and (min-resolution:.001dpcm) { 
+      @supports (-webkit-appearance:none) {
+        .button {
+          font-size: 28px; /* Larger text for buttons on Safari */
+          padding: 25px 50px; /* Larger padding for buttons on Safari */
+        }
+      }
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.6/dist/signature_pad.umd.min.js"></script>
 </head>
 <body>
   <h1>Draw your signature</h1>
   <canvas id="signatureCanvas" width="800" height="300"></canvas>
-  <button id="generateCopyButton" class="button">Generate and Copy</button>
+  <button id="saveButton" class="button">Generate</button>
   <button id="clearButton" class="button">Clear</button>
   <textarea id="output" rows="4" readonly></textarea>
+  <button id="copyButton" class="button">Copy</button>
   <script>
     const canvas = document.getElementById('signatureCanvas');
     const signaturePad = new SignaturePad(canvas, {
@@ -55,10 +66,11 @@
       penColor: 'rgb(0, 0, 0)'
     });
 
-    document.getElementById('generateCopyButton').addEventListener('click', async () => {
+    document.getElementById('saveButton').addEventListener('click', async () => {
       if (signaturePad.isEmpty()) {
         alert("Please provide a signature first.");
       } else {
+        // Get SVG data
         const dataURL = signaturePad.toDataURL('image/svg+xml');
         const blob = new Blob([dataURL], { type: 'image/svg+xml' });
 
@@ -72,25 +84,28 @@
           });
           const result = await response.json();
           if (result.success) {
-            alert('Signature successfully uploaded.');
+            alert('Signature successfully generated.');
             const encryptedLink = encryptLink(result.link);
-            const output = document.getElementById('output');
-            output.value = encryptedLink;
-            output.select();
-            document.execCommand('copy');
-            alert('Copied to clipboard!');
+            document.getElementById('output').value = encryptedLink;
           } else {
-            alert('Failed to upload the signature.');
+            alert('Failed to generate signature.');
           }
         } catch (error) {
-          console.error('Error uploading the signature:', error);
-          alert('Error uploading the signature.');
+          console.error('Error generating signature:', error);
+          alert('Error generating signature.');
         }
       }
     });
 
     document.getElementById('clearButton').addEventListener('click', () => {
       signaturePad.clear();
+    });
+
+    document.getElementById('copyButton').addEventListener('click', () => {
+      const output = document.getElementById('output');
+      output.select();
+      document.execCommand('copy');
+      alert('Copied to clipboard!');
     });
 
     function encryptLink(link) {
