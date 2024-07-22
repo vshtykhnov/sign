@@ -16,8 +16,10 @@
     #signatureCanvas {
       border: 1px solid #000;
       touch-action: none;
-      width: 500px; /* Fixed width */
-      height: 200px; /* Fixed height */
+      width: 80vw; /* Responsive width */
+      height: 40vw; /* Maintain aspect ratio */
+      max-width: 800px; /* Maximum width */
+      max-height: 400px; /* Maximum height */
     }
     .button {
       margin-top: 10px;
@@ -54,6 +56,15 @@
       backgroundColor: 'rgb(255, 255, 255)'
     });
 
+    function resizeCanvas() {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width = canvas.offsetWidth * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      canvas.getContext('2d').scale(ratio, ratio);
+      signaturePad.clear();
+      drawSignatureLine();
+    }
+
     function drawSignatureLine() {
       context.beginPath();
       context.moveTo(0, canvas.height / 2);
@@ -64,7 +75,8 @@
       context.beginPath();
     }
 
-    drawSignatureLine();
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
     document.getElementById('uploadButton').addEventListener('click', async () => {
       if (signaturePad.isEmpty()) {
