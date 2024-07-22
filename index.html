@@ -45,6 +45,7 @@
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js-svg/1.0.0/p5.svg.min.js"></script>
 </head>
 
 <body>
@@ -61,7 +62,7 @@
       const canvasContainer = document.getElementById('canvasContainer');
       const width = canvasContainer.offsetWidth;
       const height = width / 2;
-      canvas = createCanvas(width, height);
+      canvas = createCanvas(width, height, SVG);
       canvas.parent('canvasContainer');
       background(255);
       stroke(0);
@@ -83,8 +84,9 @@
       if (!drawingStarted) {
         alert("Please provide a signature first.");
       } else {
-        const svgData = canvas.elt.toDataURL('image/svg+xml');
-        const blob = new Blob([svgData], { type: 'image/svg+xml' });
+        // Get the SVG content from the canvas
+        const svgContent = canvas.elt.outerHTML;
+        const blob = new Blob([svgContent], { type: 'image/svg+xml' });
 
         const formData = new FormData();
         formData.append('file', blob, 'signature.svg');
