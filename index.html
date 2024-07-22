@@ -15,9 +15,8 @@
     }
     #signatureCanvas {
       border: 2px solid #000;
-      width: 100%;
-      max-width: 600px;
-      height: 150px;
+      width: 600px; /* Фиксированная ширина */
+      height: 150px; /* Фиксированная высота */
       box-sizing: border-box;
     }
     .button {
@@ -57,8 +56,8 @@
 
     function resizeCanvas() {
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      canvas.width = canvas.offsetWidth * ratio;
-      canvas.height = canvas.offsetHeight * ratio;
+      canvas.width = 600 * ratio;  // Фиксированная ширина
+      canvas.height = 150 * ratio;  // Фиксированная высота
       canvas.getContext('2d').scale(ratio, ratio);
       signaturePad.clear();
     }
@@ -68,11 +67,10 @@
 
     document.getElementById('saveButton').addEventListener('click', async () => {
       if (signaturePad.isEmpty()) {
-        alert("Please provide a signature first.");
+        alert("Пожалуйста, нарисуйте подпись.");
       } else {
-        // Ensure consistent SVG output size
-        const svgData = signaturePad.toDataURL('image/svg+xml');
-        const blob = new Blob([svgData], { type: 'image/svg+xml' });
+        const dataURL = signaturePad.toDataURL('image/svg+xml');
+        const blob = new Blob([dataURL], { type: 'image/svg+xml' });
 
         const formData = new FormData();
         formData.append('file', blob, 'signature.svg');
@@ -84,15 +82,15 @@
           });
           const result = await response.json();
           if (result.success) {
-            alert('Signature successfully uploaded.');
+            alert('Подпись успешно загружена.');
             const encryptedLink = encryptLink(result.link);
             document.getElementById('output').value = encryptedLink;
           } else {
-            alert('Failed to upload the signature.');
+            alert('Не удалось загрузить подпись.');
           }
         } catch (error) {
-          console.error('Error uploading the signature:', error);
-          alert('Error uploading the signature.');
+          console.error('Ошибка загрузки подписи:', error);
+          alert('Ошибка загрузки подписи.');
         }
       }
     });
@@ -105,7 +103,7 @@
       const output = document.getElementById('output');
       output.select();
       document.execCommand('copy');
-      alert('Copied to clipboard!');
+      alert('Ссылка скопирована в буфер обмена!');
     });
 
     function encryptLink(link) {
