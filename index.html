@@ -56,7 +56,8 @@
   <textarea id="output" rows="4" readonly></textarea>
   <button id="copyButton" class="button">Copy</button>
   <script>
-    let canvas, drawingStarted = false;
+    let canvas;
+    let drawingStarted = false;
 
     function setup() {
       const canvasContainer = document.getElementById('canvasContainer');
@@ -74,9 +75,17 @@
     }
 
     function draw() {
-      if (mouseIsPressed || touches.length > 0) {
+      if (mouseIsPressed) {
         drawingStarted = true;
         line(pmouseX, pmouseY, mouseX, mouseY);
+      }
+
+      if (touches.length > 0) {
+        for (let i = 0; i < touches.length; i++) {
+          drawingStarted = true;
+          const touch = touches[i];
+          line(touch.px, touch.py, touch.x, touch.y);
+        }
       }
     }
 
