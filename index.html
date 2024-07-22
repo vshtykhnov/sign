@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Draw Signature</title>
@@ -13,14 +14,15 @@
       height: 100vh;
       margin: 0;
     }
+
     #signatureCanvas {
       border: 1px solid #000;
       touch-action: none;
-      width: 80vw; /* Responsive width */
-      height: 40vw; /* Maintain aspect ratio */
-      max-width: 800px; /* Maximum width */
-      max-height: 400px; /* Maximum height */
+      width: 100%; /* Make it responsive */
+      max-width: 600px; /* Fixed max width */
+      aspect-ratio: 2 / 1; /* Maintain aspect ratio */
     }
+
     .button {
       margin-top: 10px;
       padding: 20px 40px;
@@ -30,9 +32,11 @@
       max-width: 400px;
       text-align: center;
     }
-    .button + .button {
-      margin-top: 10px; /* Adjust spacing between buttons */
+
+    .button+.button {
+      margin-top: 10px;
     }
+
     #output {
       width: 100%;
       max-width: 400px;
@@ -42,6 +46,7 @@
   </style>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 </head>
+
 <body>
   <h1>Draw your signature</h1>
   <canvas id="signatureCanvas"></canvas>
@@ -53,13 +58,17 @@
     const canvas = document.getElementById('signatureCanvas');
     const context = canvas.getContext('2d');
     const signaturePad = new SignaturePad(canvas, {
-      backgroundColor: 'rgb(255, 255, 255)'
+      backgroundColor: 'rgb(255, 255, 255)',
+      penColor: 'black'
     });
 
     function resizeCanvas() {
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      canvas.width = canvas.offsetWidth * ratio;
-      canvas.height = canvas.offsetHeight * ratio;
+      const width = canvas.offsetWidth;
+      const height = canvas.offsetHeight;
+
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
       canvas.getContext('2d').scale(ratio, ratio);
       signaturePad.clear();
       drawSignatureLine();
@@ -82,8 +91,9 @@
       if (signaturePad.isEmpty()) {
         alert("Please provide a signature first.");
       } else {
-        const dataURL = signaturePad.toDataURL('image/svg+xml');
-        const blob = new Blob([dataURL], { type: 'image/svg+xml' });
+        // Use canvas dimensions for the SVG
+        const svgData = signaturePad.toDataURL('image/svg+xml');
+        const blob = new Blob([svgData], { type: 'image/svg+xml' });
 
         const formData = new FormData();
         formData.append('file', blob, 'signature.svg');
@@ -125,4 +135,5 @@
     }
   </script>
 </body>
+
 </html>
