@@ -40,7 +40,7 @@
 <body>
   <h1>Draw your signature</h1>
   <canvas id="signatureCanvas"></canvas>
-  <button id="generateButton" class="button">Generate</button>
+  <button id="uploadButton" class="button">Generate</button>
   <button id="clearButton" class="button">Clear</button>
   <textarea id="output" rows="4" readonly></textarea>
   <button id="copyButton" class="button">Copy</button>
@@ -73,13 +73,33 @@
       context.beginPath();
     }
 
-    document.getElementById('generateButton').addEventListener('click', () => {
+    document.getElementById('uploadButton').addEventListener('click', async () => {
       if (signaturePad.isEmpty()) {
         alert("Please provide a signature first.");
       } else {
-        const svgData = signaturePad.toDataURL('image/svg+xml');
-        const svgContent = atob(svgData.split(',')[1]); // Decode base64 to SVG content
-        document.getElementById('output').value = svgContent;
+        const dataURL = signaturePad.toDataURL('image/svg+xml');
+        const blob = new Blob([dataURL], { type: 'image/svg+xml' });
+
+        const formData = new FormData();
+        formData.append('file', blob, 'signature.svg');
+
+        try {
+          const response = await fetch('https://file.io', {
+            method: 'POST',
+            body: formData
+          });
+          const result = await response.json();
+          if (result.success) {
+            alert('Signature successfully uploaded.');
+            const encryptedLink = encryptLink(result.link);
+            document.getElementById('output').value = encryptedLink;
+          } else {
+            alert('Failed to upload the signature.');
+          }
+        } catch (error) {
+          console.error('Error uploading the signature:', error);
+          alert('Error uploading the signature.');
+        }
       }
     });
 
@@ -96,6 +116,10 @@
     });
 
     drawSignatureLine();
+
+    function encryptLink(link) {
+      return btoa(link);
+    }
   </script>
 </body>
 </html>
