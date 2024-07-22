@@ -42,7 +42,7 @@
 </head>
 <body>
   <h1>Draw your signature</h1>
-  <canvas id="signatureCanvas"></canvas>
+  <canvas id="signatureCanvas" width="600" height="150"></canvas>
   <button id="saveButton" class="button">Generate</button>
   <button id="clearButton" class="button">Clear</button>
   <textarea id="output" rows="4" readonly></textarea>
@@ -54,21 +54,11 @@
       penColor: 'rgb(0, 0, 0)'
     });
 
-    function resizeCanvas() {
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      canvas.width = 600 * ratio;  // Фиксированная ширина
-      canvas.height = 150 * ratio;  // Фиксированная высота
-      canvas.getContext('2d').scale(ratio, ratio);
-      signaturePad.clear();
-    }
-
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
     document.getElementById('saveButton').addEventListener('click', async () => {
       if (signaturePad.isEmpty()) {
         alert("Пожалуйста, нарисуйте подпись.");
       } else {
+        // Получение данных в формате SVG
         const dataURL = signaturePad.toDataURL('image/svg+xml');
         const blob = new Blob([dataURL], { type: 'image/svg+xml' });
 
