@@ -17,19 +17,33 @@
       border: 1px solid #000;
       touch-action: none; /* Предотвращает прокрутку страницы при рисовании */
       width: 100%;
-      height: 80vh;
+      height: 70vh;
     }
-    button {
+    .button {
       margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
+      padding: 15px 30px;
+      font-size: 18px;
+      cursor: pointer;
+      width: 80%;
+      max-width: 400px;
+      text-align: center;
+    }
+    #signatureCanvas::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background-color: #ddd;
     }
   </style>
 </head>
 <body>
   <h1>Draw your signature</h1>
   <canvas id="signatureCanvas"></canvas>
-  <button id="copyButton">Copy to Clipboard</button>
+  <button id="copyButton" class="button">Copy to Clipboard</button>
+  <button id="clearButton" class="button">Clear</button>
   <script>
     const canvas = document.getElementById('signatureCanvas');
     const context = canvas.getContext('2d');
@@ -39,10 +53,20 @@
     function resizeCanvas() {
       canvas.width = window.innerWidth * 0.9;
       canvas.height = window.innerHeight * 0.7;
+      drawSignatureLine(); // Draw the signature line after resizing
     }
 
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
+
+    function drawSignatureLine() {
+      context.beginPath();
+      context.moveTo(0, canvas.height / 2);
+      context.lineTo(canvas.width, canvas.height / 2);
+      context.strokeStyle = '#ddd';
+      context.stroke();
+      context.beginPath();
+    }
 
     // Адаптируем для мобильных устройств
     canvas.addEventListener('touchstart', (event) => {
@@ -62,7 +86,10 @@
     });
 
     // Поддержка рисования мышью
-    canvas.addEventListener('mousedown', () => drawing = true);
+    canvas.addEventListener('mousedown', (event) => {
+      drawing = true;
+      draw(event);
+    });
     canvas.addEventListener('mouseup', () => {
       drawing = false;
       context.beginPath();
@@ -88,6 +115,11 @@
       alert('SVG copied to clipboard');
     });
 
+    document.getElementById('clearButton').addEventListener('click', () => {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      drawSignatureLine();
+    });
+
     function convertToSVG(dataURL) {
       const svgWidth = canvas.width;
       const svgHeight = canvas.height;
@@ -107,6 +139,9 @@
       document.execCommand('copy');
       document.body.removeChild(textarea);
     }
+
+    // Draw the initial signature line
+    drawSignatureLine();
   </script>
 </body>
 </html>
