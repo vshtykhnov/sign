@@ -38,7 +38,6 @@
   <button id="clearButton" class="button">Clear</button>
   <script>
     const canvas = document.getElementById('signatureCanvas');
-    const context = canvas.getContext('2d');
     const signaturePad = new SignaturePad(canvas);
 
     document.getElementById('clearButton').addEventListener('click', () => {
