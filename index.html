@@ -30,11 +30,12 @@
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
   <h1>Draw your signature</h1>
   <canvas id="signatureCanvas"></canvas>
-  <button id="copyButton" class="button">Copy to Clipboard</button>
+  <button id="uploadButton" class="button">Save and Send to Bot</button>
   <button id="clearButton" class="button">Clear</button>
   <script>
     const canvas = document.getElementById('signatureCanvas');
@@ -66,14 +67,13 @@
       context.beginPath();
     }
 
-    document.getElementById('copyButton').addEventListener('click', () => {
+    document.getElementById('uploadButton').addEventListener('click', () => {
       if (signaturePad.isEmpty()) {
         alert("Please provide a signature first.");
       } else {
-        const dataURL = signaturePad.toDataURL();
-        const svg = convertToSVG(dataURL);
-        copyToClipboard(svg);
-        alert('SVG copied to clipboard');
+        const dataURL = signaturePad.toDataURL('image/png');
+        const compressedSVG = compressToBase64(dataURL);
+        Telegram.WebApp.sendData(compressedSVG);
       }
     });
 
@@ -82,24 +82,9 @@
       drawSignatureLine();
     });
 
-    function convertToSVG(dataURL) {
-      const svgWidth = canvas.width;
-      const svgHeight = canvas.height;
-
-      return `
-        <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}">
-          <image href="${dataURL}" x="0" y="0" width="${svgWidth}" height="${svgHeight}" />
-        </svg>
-      `;
-    }
-
-    function copyToClipboard(text) {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
+    function compressToBase64(dataURL) {
+      const base64 = dataURL.split(',')[1];
+      return base64;
     }
 
     // Draw the initial signature line
