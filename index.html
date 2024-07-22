@@ -28,15 +28,6 @@
       max-width: 400px;
       text-align: center;
     }
-    #signatureCanvas::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 0;
-      width: 100%;
-      height: 1px;
-      background-color: #ddd;
-    }
   </style>
 </head>
 <body>
@@ -70,18 +61,16 @@
 
     // Адаптируем для мобильных устройств
     canvas.addEventListener('touchstart', (event) => {
-      event.preventDefault();
       drawing = true;
+      draw(event.touches[0]);
     });
 
-    canvas.addEventListener('touchend', (event) => {
-      event.preventDefault();
+    canvas.addEventListener('touchend', () => {
       drawing = false;
       context.beginPath();
     });
 
     canvas.addEventListener('touchmove', (event) => {
-      event.preventDefault();
       draw(event.touches[0]);
     });
 
@@ -99,13 +88,16 @@
     function draw(event) {
       if (!drawing) return;
       const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left || event.touches[0].clientX - rect.left;
+      const y = event.clientY - rect.top || event.touches[0].clientY - rect.top;
+      
       context.lineWidth = 2;
       context.lineCap = 'round';
       context.strokeStyle = '#000';
-      context.lineTo(event.clientX - rect.left, event.clientY - rect.top);
+      context.lineTo(x, y);
       context.stroke();
       context.beginPath();
-      context.moveTo(event.clientX - rect.left, event.clientY - rect.top);
+      context.moveTo(x, y);
     }
 
     document.getElementById('copyButton').addEventListener('click', () => {
