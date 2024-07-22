@@ -81,8 +81,7 @@
         const svgData = signaturePad.toDataURL('image/svg+xml');
         const svgContent = atob(svgData.split(',')[1]); // Decode base64 to SVG content
         const compressedSvg = pako.deflate(svgContent, { to: 'string' }); // Compress the SVG content
-        const encryptedCompressedSvg = btoa(compressedSvg); // Encrypt the compressed SVG content
-        document.getElementById('output').value = encryptedCompressedSvg;
+        document.getElementById('output').value = compressedSvg;
       }
     });
 
