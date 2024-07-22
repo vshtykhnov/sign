@@ -30,6 +30,7 @@
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+  <script src="https://telegram-web-apps.github.io/core/v1.0.0/telegram-web-apps.js"></script>
 </head>
 <body>
   <h1>Draw your signature</h1>
@@ -83,7 +84,7 @@
           const result = await response.json();
           if (result.success) {
             alert('Signature uploaded successfully. File URL: ' + result.link);
-            console.log('File URL:', result.link);
+            sendDataToTelegram(result.link);
           } else {
             alert('Failed to upload the signature.');
           }
@@ -110,6 +111,14 @@
         ia[i] = byteString.charCodeAt(i);
       }
       return new Blob([ab], { type: mimeString });
+    }
+
+    function sendDataToTelegram(link) {
+      if (window.Telegram.WebApp) {
+        window.Telegram.WebApp.sendData(link);
+      } else {
+        alert('Telegram WebApp is not available.');
+      }
     }
   </script>
 </body>
