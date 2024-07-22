@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Signature Capture with Konva</title>
+  <title>Draw Signature</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,20 +13,25 @@
       height: 100vh;
       margin: 0;
     }
-
-    #container {
+    #signatureCanvas {
       border: 2px solid #000;
-      width: 300px;
+      width: 100%;
+      max-width: 600px;
       height: 150px;
+      box-sizing: border-box;
     }
-
     .button {
       margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 18px;
+      padding: 20px 40px;
+      font-size: 24px;
       cursor: pointer;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
     }
-
+    .button + .button {
+      margin-top: 10px;
+    }
     #output {
       width: 100%;
       max-width: 400px;
@@ -34,90 +39,65 @@
       font-size: 16px;
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/konva@8/konva.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.6/dist/signature_pad.umd.min.js"></script>
 </head>
 <body>
   <h1>Draw your signature</h1>
-  <div id="container"></div>
+  <canvas id="signatureCanvas"></canvas>
   <button id="saveButton" class="button">Generate</button>
   <button id="clearButton" class="button">Clear</button>
   <textarea id="output" rows="4" readonly></textarea>
   <button id="copyButton" class="button">Copy</button>
-
   <script>
-    const width = 300;
-    const height = 150;
-
-    // Create stage
-    const stage = new Konva.Stage({
-      container: 'container',
-      width: width,
-      height: height,
+    const canvas = document.getElementById('signatureCanvas');
+    const signaturePad = new SignaturePad(canvas, {
+      backgroundColor: 'rgb(255, 255, 255)',
+      penColor: 'rgb(0, 0, 0)'
     });
 
-    // Create layer
-    const layer = new Konva.Layer();
-    stage.add(layer);
+    function resizeCanvas() {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width = canvas.offsetWidth * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      canvas.getContext('2d').scale(ratio, ratio);
+      signaturePad.clear();
+    }
 
-    // Create a line
-    let isPainting = false;
-    let lastLine;
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-    stage.on('mousedown touchstart', (e) => {
-      isPainting = true;
-      const pos = stage.getPointerPosition();
-      lastLine = new Konva.Line({
-        stroke: 'black',
-        strokeWidth: 2,
-        globalCompositeOperation: 'source-over',
-        points: [pos.x, pos.y],
-      });
-      layer.add(lastLine);
-    });
+    document.getElementById('saveButton').addEventListener('click', async () => {
+      if (signaturePad.isEmpty()) {
+        alert("Please provide a signature first.");
+      } else {
+        const dataURL = signaturePad.toDataURL('image/svg+xml');
+        const blob = new Blob([dataURL], { type: 'image/svg+xml' });
 
-    stage.on('mousemove touchmove', (e) => {
-      if (!isPainting) return;
+        const formData = new FormData();
+        formData.append('file', blob, 'signature.svg');
 
-      const pos = stage.getPointerPosition();
-      const newPoints = lastLine.points().concat([pos.x, pos.y]);
-      lastLine.points(newPoints);
-      layer.batchDraw();
-    });
-
-    stage.on('mouseup touchend', () => {
-      isPainting = false;
-    });
-
-    document.getElementById('saveButton').addEventListener('click', () => {
-      const dataURL = stage.toDataURL({ mimeType: 'image/svg+xml' });
-      const blob = new Blob([dataURL], { type: 'image/svg+xml' });
-
-      const formData = new FormData();
-      formData.append('file', blob, 'signature.svg');
-
-      fetch('https://file.io', {
-        method: 'POST',
-        body: formData,
-      })
-        .then((response) => response.json())
-        .then((result) => {
+        try {
+          const response = await fetch('https://file.io', {
+            method: 'POST',
+            body: formData
+          });
+          const result = await response.json();
           if (result.success) {
             alert('Signature successfully uploaded.');
-            const encryptedLink = btoa(result.link);
+            const encryptedLink = encryptLink(result.link);
             document.getElementById('output').value = encryptedLink;
           } else {
             alert('Failed to upload the signature.');
           }
-        })
-        .catch((error) => {
+        } catch (error) {
           console.error('Error uploading the signature:', error);
           alert('Error uploading the signature.');
-        });
+        }
+      }
     });
 
     document.getElementById('clearButton').addEventListener('click', () => {
-      layer.destroyChildren();
-      layer.draw();
+      signaturePad.clear();
     });
 
     document.getElementById('copyButton').addEventListener('click', () => {
@@ -126,6 +106,10 @@
       document.execCommand('copy');
       alert('Copied to clipboard!');
     });
+
+    function encryptLink(link) {
+      return btoa(link);
+    }
   </script>
 </body>
 </html>
