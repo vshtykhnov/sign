@@ -15,8 +15,8 @@
     }
     #signatureCanvas {
       border: 2px solid #000;
-      width: 800px; /* Увеличенная ширина */
-      height: 300px; /* Увеличенная высота */
+      width: 800px;
+      height: 300px;
       box-sizing: border-box;
     }
     .button {
@@ -35,7 +35,9 @@
       width: 100%;
       max-width: 400px;
       margin-top: 10px;
-      font-size: 16px;
+      font-size: 18px; /* Larger text for the output */
+      padding: 10px; /* Padding for better readability */
+      box-sizing: border-box;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.6/dist/signature_pad.umd.min.js"></script>
@@ -43,10 +45,9 @@
 <body>
   <h1>Draw your signature</h1>
   <canvas id="signatureCanvas" width="800" height="300"></canvas>
-  <button id="saveButton" class="button">Generate</button>
+  <button id="generateCopyButton" class="button">Generate and Copy</button>
   <button id="clearButton" class="button">Clear</button>
   <textarea id="output" rows="4" readonly></textarea>
-  <button id="copyButton" class="button">Copy</button>
   <script>
     const canvas = document.getElementById('signatureCanvas');
     const signaturePad = new SignaturePad(canvas, {
@@ -54,11 +55,10 @@
       penColor: 'rgb(0, 0, 0)'
     });
 
-    document.getElementById('saveButton').addEventListener('click', async () => {
+    document.getElementById('generateCopyButton').addEventListener('click', async () => {
       if (signaturePad.isEmpty()) {
-        alert("Пожалуйста, нарисуйте подпись.");
+        alert("Please provide a signature first.");
       } else {
-        // Получение данных в формате SVG
         const dataURL = signaturePad.toDataURL('image/svg+xml');
         const blob = new Blob([dataURL], { type: 'image/svg+xml' });
 
@@ -72,28 +72,25 @@
           });
           const result = await response.json();
           if (result.success) {
-            alert('Подпись успешно загружена.');
+            alert('Signature successfully uploaded.');
             const encryptedLink = encryptLink(result.link);
-            document.getElementById('output').value = encryptedLink;
+            const output = document.getElementById('output');
+            output.value = encryptedLink;
+            output.select();
+            document.execCommand('copy');
+            alert('Copied to clipboard!');
           } else {
-            alert('Не удалось загрузить подпись.');
+            alert('Failed to upload the signature.');
           }
         } catch (error) {
-          console.error('Ошибка загрузки подписи:', error);
-          alert('Ошибка загрузки подписи.');
+          console.error('Error uploading the signature:', error);
+          alert('Error uploading the signature.');
         }
       }
     });
 
     document.getElementById('clearButton').addEventListener('click', () => {
       signaturePad.clear();
-    });
-
-    document.getElementById('copyButton').addEventListener('click', () => {
-      const output = document.getElementById('output');
-      output.select();
-      document.execCommand('copy');
-      alert('Ссылка скопирована в буфер обмена!');
     });
 
     function encryptLink(link) {
