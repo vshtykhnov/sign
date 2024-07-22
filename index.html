@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Draw Signature</title>
+  <title>Draw Signature with P5.js</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,12 +15,12 @@
       margin: 0;
     }
 
-    #signatureCanvas {
-      border: 1px solid #000;
-      touch-action: none;
-      width: 100%; /* Make it responsive */
-      max-width: 600px; /* Fixed max width */
-      aspect-ratio: 2 / 1; /* Maintain aspect ratio */
+    #canvasContainer {
+      width: 100%;
+      max-width: 600px;
+      aspect-ratio: 2 / 1;
+      border: 2px solid #000;
+      box-sizing: border-box;
     }
 
     .button {
@@ -33,7 +33,7 @@
       text-align: center;
     }
 
-    .button+.button {
+    .button + .button {
       margin-top: 10px;
     }
 
@@ -44,55 +44,41 @@
       font-size: 16px;
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 
 <body>
   <h1>Draw your signature</h1>
-  <canvas id="signatureCanvas"></canvas>
-  <button id="uploadButton" class="button">Generate</button>
+  <div id="canvasContainer"></div>
+  <button id="saveButton" class="button">Generate</button>
   <button id="clearButton" class="button">Clear</button>
   <textarea id="output" rows="4" readonly></textarea>
   <button id="copyButton" class="button">Copy</button>
   <script>
-    const canvas = document.getElementById('signatureCanvas');
-    const context = canvas.getContext('2d');
-    const signaturePad = new SignaturePad(canvas, {
-      backgroundColor: 'rgb(255, 255, 255)',
-      penColor: 'black'
-    });
+    let canvas;
 
-    function resizeCanvas() {
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      const width = canvas.offsetWidth;
-      const height = canvas.offsetHeight;
-
-      canvas.width = width * ratio;
-      canvas.height = height * ratio;
-      canvas.getContext('2d').scale(ratio, ratio);
-      signaturePad.clear();
-      drawSignatureLine();
+    function setup() {
+      const canvasContainer = document.getElementById('canvasContainer');
+      const width = canvasContainer.offsetWidth;
+      const height = width / 2;
+      canvas = createCanvas(width, height);
+      canvas.parent('canvasContainer');
+      background(255);
+      stroke(0);
+      strokeWeight(2);
     }
 
-    function drawSignatureLine() {
-      context.beginPath();
-      context.moveTo(0, canvas.height / 2);
-      context.lineTo(canvas.width, canvas.height / 2);
-      context.strokeStyle = '#ddd';
-      context.lineWidth = 2;
-      context.stroke();
-      context.beginPath();
+    function draw() {
+      if (mouseIsPressed) {
+        line(pmouseX, pmouseY, mouseX, mouseY);
+      }
     }
 
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    document.getElementById('uploadButton').addEventListener('click', async () => {
-      if (signaturePad.isEmpty()) {
+    document.getElementById('saveButton').addEventListener('click', async () => {
+      if (isDrawingEmpty()) {
         alert("Please provide a signature first.");
       } else {
-        // Use canvas dimensions for the SVG
-        const svgData = signaturePad.toDataURL('image/svg+xml');
+        const svgData = canvas.elt.toDataURL('image/svg+xml');
         const blob = new Blob([svgData], { type: 'image/svg+xml' });
 
         const formData = new FormData();
@@ -119,8 +105,8 @@
     });
 
     document.getElementById('clearButton').addEventListener('click', () => {
-      signaturePad.clear();
-      drawSignatureLine();
+      clear();
+      background(255);
     });
 
     document.getElementById('copyButton').addEventListener('click', () => {
@@ -129,6 +115,19 @@
       document.execCommand('copy');
       alert('Copied to clipboard!');
     });
+
+    window.addEventListener('resize', () => {
+      const canvasContainer = document.getElementById('canvasContainer');
+      const width = canvasContainer.offsetWidth;
+      const height = width / 2;
+      resizeCanvas(width, height);
+      background(255);
+    });
+
+    function isDrawingEmpty() {
+      const pixelData = get(0, 0, width, height).pixels;
+      return pixelData.every((pixel) => pixel === 255);
+    }
 
     function encryptLink(link) {
       return btoa(link);
