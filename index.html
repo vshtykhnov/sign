@@ -12,7 +12,9 @@
 <body>
   <h1>Draw your signature</h1>
   <canvas id="signatureCanvas" width="500" height="200"></canvas>
-  <button id="saveButton">Save</button>
+  <button id="saveButton">Save as SVG</button>
+  <textarea id="svgOutput" rows="10" cols="60" readonly></textarea>
+  <button id="copyButton">Copy to Clipboard</button>
   <script>
     const canvas = document.getElementById('signatureCanvas');
     const context = canvas.getContext('2d');
@@ -42,9 +44,30 @@
 
     document.getElementById('saveButton').addEventListener('click', () => {
       const dataURL = canvas.toDataURL();
-      // Send dataURL to server or handle it here
-      console.log(dataURL); // For testing purposes
+      const svgOutput = document.getElementById('svgOutput');
+      const svg = convertToSVG(dataURL);
+      svgOutput.value = svg;
     });
+
+    document.getElementById('copyButton').addEventListener('click', () => {
+      const svgOutput = document.getElementById('svgOutput');
+      svgOutput.select();
+      document.execCommand('copy');
+      alert('SVG copied to clipboard');
+    });
+
+    function convertToSVG(dataURL) {
+      const image = new Image();
+      image.src = dataURL;
+      const svgWidth = canvas.width;
+      const svgHeight = canvas.height;
+
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}">
+          <image href="${dataURL}" x="0" y="0" width="${svgWidth}" height="${svgHeight}" />
+        </svg>
+      `;
+    }
   </script>
 </body>
 </html>
