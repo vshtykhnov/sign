@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
-  <title>Draw Signature with P5.js</title>
+  <title>Signature Capture with Konva</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,26 +14,17 @@
       margin: 0;
     }
 
-    #canvasContainer {
-      width: 100%;
-      max-width: 600px;
-      aspect-ratio: 2 / 1;
+    #container {
       border: 2px solid #000;
-      box-sizing: border-box;
+      width: 300px;
+      height: 150px;
     }
 
     .button {
       margin-top: 10px;
-      padding: 20px 40px;
-      font-size: 24px;
+      padding: 10px 20px;
+      font-size: 18px;
       cursor: pointer;
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-    }
-
-    .button + .button {
-      margin-top: 10px;
     }
 
     #output {
@@ -44,86 +34,90 @@
       font-size: 16px;
     }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js-svg/1.0.0/p5.svg.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/konva@8/konva.min.js"></script>
 </head>
-
 <body>
   <h1>Draw your signature</h1>
-  <div id="canvasContainer"></div>
+  <div id="container"></div>
   <button id="saveButton" class="button">Generate</button>
   <button id="clearButton" class="button">Clear</button>
   <textarea id="output" rows="4" readonly></textarea>
   <button id="copyButton" class="button">Copy</button>
+
   <script>
-    let canvas;
-    let drawingStarted = false;
+    const width = 300;
+    const height = 150;
 
-    function setup() {
-      const canvasContainer = document.getElementById('canvasContainer');
-      const width = canvasContainer.offsetWidth;
-      const height = width / 2;
-      canvas = createCanvas(width, height, SVG);
-      canvas.parent('canvasContainer');
-      background(255);
-      stroke(0);
-      strokeWeight(2);
+    // Create stage
+    const stage = new Konva.Stage({
+      container: 'container',
+      width: width,
+      height: height,
+    });
 
-      // Prevent scrolling when drawing on touch devices
-      canvas.elt.addEventListener('touchstart', preventDefaultTouch, { passive: false });
-      canvas.elt.addEventListener('touchmove', preventDefaultTouch, { passive: false });
-    }
+    // Create layer
+    const layer = new Konva.Layer();
+    stage.add(layer);
 
-    function draw() {
-      if (mouseIsPressed) {
-        drawingStarted = true;
-        line(pmouseX, pmouseY, mouseX, mouseY);
-      }
+    // Create a line
+    let isPainting = false;
+    let lastLine;
 
-      if (touches.length > 0) {
-        for (let i = 0; i < touches.length; i++) {
-          drawingStarted = true;
-          const touch = touches[i];
-          line(touch.px, touch.py, touch.x, touch.y);
-        }
-      }
-    }
+    stage.on('mousedown touchstart', (e) => {
+      isPainting = true;
+      const pos = stage.getPointerPosition();
+      lastLine = new Konva.Line({
+        stroke: 'black',
+        strokeWidth: 2,
+        globalCompositeOperation: 'source-over',
+        points: [pos.x, pos.y],
+      });
+      layer.add(lastLine);
+    });
 
-    document.getElementById('saveButton').addEventListener('click', async () => {
-      if (!drawingStarted) {
-        alert("Please provide a signature first.");
-      } else {
-        // Get the SVG content from the canvas
-        const svgContent = canvas.elt.outerHTML;
-        const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    stage.on('mousemove touchmove', (e) => {
+      if (!isPainting) return;
 
-        const formData = new FormData();
-        formData.append('file', blob, 'signature.svg');
+      const pos = stage.getPointerPosition();
+      const newPoints = lastLine.points().concat([pos.x, pos.y]);
+      lastLine.points(newPoints);
+      layer.batchDraw();
+    });
 
-        try {
-          const response = await fetch('https://file.io', {
-            method: 'POST',
-            body: formData
-          });
-          const result = await response.json();
+    stage.on('mouseup touchend', () => {
+      isPainting = false;
+    });
+
+    document.getElementById('saveButton').addEventListener('click', () => {
+      const dataURL = stage.toDataURL({ mimeType: 'image/svg+xml' });
+      const blob = new Blob([dataURL], { type: 'image/svg+xml' });
+
+      const formData = new FormData();
+      formData.append('file', blob, 'signature.svg');
+
+      fetch('https://file.io', {
+        method: 'POST',
+        body: formData,
+      })
+        .then((response) => response.json())
+        .then((result) => {
           if (result.success) {
             alert('Signature successfully uploaded.');
-            const encryptedLink = encryptLink(result.link);
+            const encryptedLink = btoa(result.link);
             document.getElementById('output').value = encryptedLink;
           } else {
             alert('Failed to upload the signature.');
           }
-        } catch (error) {
+        })
+        .catch((error) => {
           console.error('Error uploading the signature:', error);
           alert('Error uploading the signature.');
-        }
-      }
+        });
     });
 
     document.getElementById('clearButton').addEventListener('click', () => {
-      clear();
-      background(255);
-      drawingStarted = false;
+      layer.destroyChildren();
+      layer.draw();
     });
 
     document.getElementById('copyButton').addEventListener('click', () => {
@@ -132,24 +126,6 @@
       document.execCommand('copy');
       alert('Copied to clipboard!');
     });
-
-    window.addEventListener('resize', () => {
-      const canvasContainer = document.getElementById('canvasContainer');
-      const width = canvasContainer.offsetWidth;
-      const height = width / 2;
-      resizeCanvas(width, height);
-      background(255);
-      drawingStarted = false;
-    });
-
-    function preventDefaultTouch(e) {
-      e.preventDefault();
-    }
-
-    function encryptLink(link) {
-      return btoa(link);
-    }
   </script>
 </body>
-
 </html>
