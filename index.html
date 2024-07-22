@@ -28,6 +28,11 @@
       max-width: 400px;
       text-align: center;
     }
+    #output {
+      width: 100%;
+      max-width: 400px;
+      margin-top: 10px;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 </head>
@@ -36,6 +41,7 @@
   <canvas id="signatureCanvas"></canvas>
   <button id="uploadButton" class="button">Save and Copy Link</button>
   <button id="clearButton" class="button">Clear</button>
+  <textarea id="output" rows="4" readonly></textarea>
   <script>
     const canvas = document.getElementById('signatureCanvas');
     const context = canvas.getContext('2d');
@@ -83,7 +89,9 @@
           const result = await response.json();
           if (result.success) {
             alert('Signature uploaded successfully.');
-            copyToClipboard(encryptLink(result.link));
+            const encryptedLink = encryptLink(result.link);
+            document.getElementById('output').value = encryptedLink;
+            copyToClipboard(document.getElementById('output'));
           } else {
             alert('Failed to upload the signature.');
           }
@@ -116,12 +124,10 @@
       return btoa(link);
     }
 
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        alert('Link copied to clipboard!');
-      }, (err) => {
-        console.error('Could not copy text: ', err);
-      });
+    function copyToClipboard(textArea) {
+      textArea.select();
+      document.execCommand('copy');
+      alert('Link copied to clipboard!');
     }
   </script>
 </body>
