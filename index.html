@@ -21,10 +21,10 @@
     }
     .button {
       margin-top: 10px;
-      padding: 15px 30px;
-      font-size: 18px;
+      padding: 20px 40px;
+      font-size: 24px;
       cursor: pointer;
-      width: 80%;
+      width: 90%;
       max-width: 400px;
       text-align: center;
     }
@@ -38,6 +38,7 @@
   <button id="clearButton" class="button">Clear</button>
   <script>
     const canvas = document.getElementById('signatureCanvas');
+    const context = canvas.getContext('2d');
     const signaturePad = new SignaturePad(canvas, {
       backgroundColor: 'rgb(255, 255, 255)'
     });
@@ -49,10 +50,21 @@
       canvas.height = canvas.offsetHeight * ratio;
       canvas.getContext("2d").scale(ratio, ratio);
       signaturePad.clear(); // otherwise isEmpty() might return incorrect value
+      drawSignatureLine();
     }
 
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
+
+    function drawSignatureLine() {
+      context.beginPath();
+      context.moveTo(0, canvas.height / 2);
+      context.lineTo(canvas.width, canvas.height / 2);
+      context.strokeStyle = '#ddd';
+      context.lineWidth = 2;
+      context.stroke();
+      context.beginPath();
+    }
 
     document.getElementById('copyButton').addEventListener('click', () => {
       if (signaturePad.isEmpty()) {
@@ -67,6 +79,7 @@
 
     document.getElementById('clearButton').addEventListener('click', () => {
       signaturePad.clear();
+      drawSignatureLine();
     });
 
     function convertToSVG(dataURL) {
@@ -88,6 +101,9 @@
       document.execCommand('copy');
       document.body.removeChild(textarea);
     }
+
+    // Draw the initial signature line
+    drawSignatureLine();
   </script>
 </body>
 </html>
