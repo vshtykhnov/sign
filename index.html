@@ -10,34 +10,39 @@
       flex-direction: column;
       align-items: center;
       padding: 20px;
+      height: 100vh;
+      margin: 0;
     }
     #signatureCanvas {
       border: 1px solid #000;
       touch-action: none; /* Предотвращает прокрутку страницы при рисовании */
+      width: 100%;
+      height: 80vh;
     }
     button {
       margin-top: 10px;
       padding: 10px 20px;
       font-size: 16px;
     }
-    textarea {
-      margin-top: 10px;
-      width: 100%;
-      max-width: 500px;
-      height: 100px;
-      font-size: 14px;
-    }
   </style>
 </head>
 <body>
   <h1>Draw your signature</h1>
-  <canvas id="signatureCanvas" width="500" height="200"></canvas>
+  <canvas id="signatureCanvas"></canvas>
   <button id="copyButton">Copy to Clipboard</button>
-  <textarea id="svgOutput" readonly></textarea>
   <script>
     const canvas = document.getElementById('signatureCanvas');
     const context = canvas.getContext('2d');
     let drawing = false;
+
+    // Resize the canvas to fit the window
+    function resizeCanvas() {
+      canvas.width = window.innerWidth * 0.9;
+      canvas.height = window.innerHeight * 0.7;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
     // Адаптируем для мобильных устройств
     canvas.addEventListener('touchstart', (event) => {
@@ -78,9 +83,7 @@
 
     document.getElementById('copyButton').addEventListener('click', () => {
       const dataURL = canvas.toDataURL();
-      const svgOutput = document.getElementById('svgOutput');
       const svg = convertToSVG(dataURL);
-      svgOutput.value = svg;
       copyToClipboard(svg);
       alert('SVG copied to clipboard');
     });
