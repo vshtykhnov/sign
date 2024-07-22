@@ -4,61 +4,88 @@
   <meta charset="UTF-8">
   <title>Draw Signature</title>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
     #signatureCanvas {
       border: 1px solid #000;
+      touch-action: none; /* Предотвращает прокрутку страницы при рисовании */
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    textarea {
+      margin-top: 10px;
+      width: 100%;
+      max-width: 500px;
+      height: 100px;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
   <h1>Draw your signature</h1>
   <canvas id="signatureCanvas" width="500" height="200"></canvas>
-  <button id="saveButton">Save as SVG</button>
-  <textarea id="svgOutput" rows="10" cols="60" readonly></textarea>
   <button id="copyButton">Copy to Clipboard</button>
+  <textarea id="svgOutput" readonly></textarea>
   <script>
     const canvas = document.getElementById('signatureCanvas');
     const context = canvas.getContext('2d');
     let drawing = false;
 
-    canvas.addEventListener('mousedown', () => {
+    // Адаптируем для мобильных устройств
+    canvas.addEventListener('touchstart', (event) => {
+      event.preventDefault();
       drawing = true;
     });
 
-    canvas.addEventListener('mouseup', () => {
+    canvas.addEventListener('touchend', (event) => {
+      event.preventDefault();
       drawing = false;
       context.beginPath();
     });
 
+    canvas.addEventListener('touchmove', (event) => {
+      event.preventDefault();
+      draw(event.touches[0]);
+    });
+
+    // Поддержка рисования мышью
+    canvas.addEventListener('mousedown', () => drawing = true);
+    canvas.addEventListener('mouseup', () => {
+      drawing = false;
+      context.beginPath();
+    });
     canvas.addEventListener('mousemove', draw);
 
     function draw(event) {
       if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
       context.lineWidth = 2;
       context.lineCap = 'round';
       context.strokeStyle = '#000';
-      context.lineTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
+      context.lineTo(event.clientX - rect.left, event.clientY - rect.top);
       context.stroke();
       context.beginPath();
-      context.moveTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
+      context.moveTo(event.clientX - rect.left, event.clientY - rect.top);
     }
 
-    document.getElementById('saveButton').addEventListener('click', () => {
+    document.getElementById('copyButton').addEventListener('click', () => {
       const dataURL = canvas.toDataURL();
       const svgOutput = document.getElementById('svgOutput');
       const svg = convertToSVG(dataURL);
       svgOutput.value = svg;
-    });
-
-    document.getElementById('copyButton').addEventListener('click', () => {
-      const svgOutput = document.getElementById('svgOutput');
-      svgOutput.select();
-      document.execCommand('copy');
+      copyToClipboard(svg);
       alert('SVG copied to clipboard');
     });
 
     function convertToSVG(dataURL) {
-      const image = new Image();
-      image.src = dataURL;
       const svgWidth = canvas.width;
       const svgHeight = canvas.height;
 
@@ -67,6 +94,15 @@
           <image href="${dataURL}" x="0" y="0" width="${svgWidth}" height="${svgHeight}" />
         </svg>
       `;
+    }
+
+    function copyToClipboard(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
     }
   </script>
 </body>
