@@ -16,10 +16,9 @@
     #signatureCanvas {
       border: 1px solid #000;
       touch-action: none;
-      width: 80vw; /* Responsive width */
-      height: 40vw; /* Maintain aspect ratio */
-      max-width: 800px; /* Maximum width */
-      max-height: 400px; /* Maximum height */
+      width: 600px; /* Fixed width */
+      height: 300px; /* Fixed height */
+      max-width: 100%; /* Responsive to the container */
     }
     .button {
       margin-top: 10px;
@@ -53,17 +52,9 @@
     const canvas = document.getElementById('signatureCanvas');
     const context = canvas.getContext('2d');
     const signaturePad = new SignaturePad(canvas, {
-      backgroundColor: 'rgb(255, 255, 255)'
+      backgroundColor: 'rgb(255, 255, 255)',
+      penColor: 'black'
     });
-
-    function resizeCanvas() {
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      canvas.width = canvas.offsetWidth * ratio;
-      canvas.height = canvas.offsetHeight * ratio;
-      canvas.getContext('2d').scale(ratio, ratio);
-      signaturePad.clear();
-      drawSignatureLine();
-    }
 
     function drawSignatureLine() {
       context.beginPath();
@@ -75,13 +66,13 @@
       context.beginPath();
     }
 
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+    drawSignatureLine();
 
     document.getElementById('uploadButton').addEventListener('click', async () => {
       if (signaturePad.isEmpty()) {
         alert("Please provide a signature first.");
       } else {
+        // Ensure the saved SVG matches the canvas dimensions
         const dataURL = signaturePad.toDataURL('image/svg+xml');
         const blob = new Blob([dataURL], { type: 'image/svg+xml' });
 
