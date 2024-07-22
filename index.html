@@ -55,7 +55,7 @@
   <textarea id="output" rows="4" readonly></textarea>
   <button id="copyButton" class="button">Copy</button>
   <script>
-    let canvas;
+    let canvas, drawingStarted = false;
 
     function setup() {
       const canvasContainer = document.getElementById('canvasContainer');
@@ -66,16 +66,21 @@
       background(255);
       stroke(0);
       strokeWeight(2);
+
+      // Prevent scrolling when drawing on touch devices
+      canvas.elt.addEventListener('touchstart', preventDefaultTouch, { passive: false });
+      canvas.elt.addEventListener('touchmove', preventDefaultTouch, { passive: false });
     }
 
     function draw() {
-      if (mouseIsPressed) {
+      if (mouseIsPressed || touches.length > 0) {
+        drawingStarted = true;
         line(pmouseX, pmouseY, mouseX, mouseY);
       }
     }
 
     document.getElementById('saveButton').addEventListener('click', async () => {
-      if (isDrawingEmpty()) {
+      if (!drawingStarted) {
         alert("Please provide a signature first.");
       } else {
         const svgData = canvas.elt.toDataURL('image/svg+xml');
@@ -107,6 +112,7 @@
     document.getElementById('clearButton').addEventListener('click', () => {
       clear();
       background(255);
+      drawingStarted = false;
     });
 
     document.getElementById('copyButton').addEventListener('click', () => {
@@ -122,11 +128,11 @@
       const height = width / 2;
       resizeCanvas(width, height);
       background(255);
+      drawingStarted = false;
     });
 
-    function isDrawingEmpty() {
-      const pixelData = get(0, 0, width, height).pixels;
-      return pixelData.every((pixel) => pixel === 255);
+    function preventDefaultTouch(e) {
+      e.preventDefault();
     }
 
     function encryptLink(link) {
