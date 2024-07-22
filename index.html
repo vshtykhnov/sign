@@ -9,36 +9,52 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
+      justify-content: center;
       height: 100vh;
       margin: 0;
+      padding: 10px;
+      box-sizing: border-box;
     }
     #signatureCanvas {
       border: 1px solid #000;
       touch-action: none;
       width: 100%;
-      height: 70vh;
+      max-width: 600px;
+      height: 50vh;
     }
     .button {
       margin-top: 10px;
-      padding: 20px 40px;
-      font-size: 24px;
+      padding: 15px 30px;
+      font-size: 18px;
       cursor: pointer;
       width: 90%;
-      max-width: 400px;
+      max-width: 300px;
       text-align: center;
+    }
+    .center-line {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background-color: #000;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 </head>
 <body>
   <h1>Draw your signature</h1>
+  <div class="center-line"></div>
   <canvas id="signatureCanvas"></canvas>
   <button id="saveButton" class="button">Save and Copy</button>
   <button id="clearButton" class="button">Clear</button>
   <script>
     const canvas = document.getElementById('signatureCanvas');
     const signaturePad = new SignaturePad(canvas);
+
+    // Поддержка сенсорного ввода
+    canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+    canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
     document.getElementById('clearButton').addEventListener('click', () => {
       signaturePad.clear();
