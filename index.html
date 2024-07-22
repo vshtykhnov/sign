@@ -9,68 +9,117 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      padding: 20px;
       height: 100vh;
       margin: 0;
-      padding: 10px;
-      box-sizing: border-box;
     }
     #signatureCanvas {
       border: 1px solid #000;
       touch-action: none;
       width: 100%;
-      max-width: 600px;
-      height: 50vh;
+      height: 70vh;
     }
     .button {
       margin-top: 10px;
-      padding: 15px 30px;
-      font-size: 18px;
+      padding: 20px 40px;
+      font-size: 24px;
       cursor: pointer;
       width: 90%;
-      max-width: 300px;
+      max-width: 400px;
       text-align: center;
-    }
-    .center-line {
-      position: absolute;
-      top: 50%;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background-color: #000;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+  <script src="https://telegram-web-apps.github.io/core/v1.0.0/telegram-web-apps.js"></script>
 </head>
 <body>
   <h1>Draw your signature</h1>
-  <div class="center-line"></div>
   <canvas id="signatureCanvas"></canvas>
-  <button id="saveButton" class="button">Save and Copy</button>
+  <button id="uploadButton" class="button">Save and Upload to File.io</button>
   <button id="clearButton" class="button">Clear</button>
   <script>
     const canvas = document.getElementById('signatureCanvas');
-    const signaturePad = new SignaturePad(canvas);
+    const context = canvas.getContext('2d');
+    const signaturePad = new SignaturePad(canvas, {
+      backgroundColor: 'rgb(255, 255, 255)'
+    });
 
-    // Поддержка сенсорного ввода
-    canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
-    canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+    function resizeCanvas() {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width = canvas.offsetWidth * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      canvas.getContext("2d").scale(ratio, ratio);
+      signaturePad.clear();
+      drawSignatureLine();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function drawSignatureLine() {
+      context.beginPath();
+      context.moveTo(0, canvas.height / 2);
+      context.lineTo(canvas.width, canvas.height / 2);
+      context.strokeStyle = '#ddd';
+      context.lineWidth = 2;
+      context.stroke();
+      context.beginPath();
+    }
+
+    document.getElementById('uploadButton').addEventListener('click', async () => {
+      if (signaturePad.isEmpty()) {
+        alert("Please provide a signature first.");
+      } else {
+        const dataURL = signaturePad.toDataURL('image/png');
+        const blob = dataURLToBlob(dataURL);
+
+        const formData = new FormData();
+        formData.append('file', blob, 'signature.png');
+
+        try {
+          const response = await fetch('https://file.io', {
+            method: 'POST',
+            body: formData
+          });
+          const result = await response.json();
+          if (result.success) {
+            alert('Signature uploaded successfully. File URL: ' + result.link);
+            sendDataToTelegram(result.link);
+          } else {
+            alert('Failed to upload the signature.');
+          }
+        } catch (error) {
+          console.error('Error uploading the signature:', error);
+          alert('Error uploading the signature.');
+        }
+      }
+    });
 
     document.getElementById('clearButton').addEventListener('click', () => {
       signaturePad.clear();
+      drawSignatureLine();
     });
 
-    document.getElementById('saveButton').addEventListener('click', async () => {
-      if (signaturePad.isEmpty()) {
-        alert("Please provide a signature first.");
-        return;
+    drawSignatureLine();
+
+    function dataURLToBlob(dataURL) {
+      const byteString = atob(dataURL.split(',')[1]);
+      const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
       }
+      return new Blob([ab], { type: mimeString });
+    }
 
-      const dataURL = signaturePad.toDataURL();
-      const encryptedData = btoa(dataURL); // Простой base64 для шифрования
-      await navigator.clipboard.writeText(encryptedData);
-      alert("Signature copied to clipboard!");
-    });
+    function sendDataToTelegram(link) {
+      if (window.Telegram.WebApp) {
+        window.Telegram.WebApp.sendData(link);
+      } else {
+        alert('Telegram WebApp is not available.');
+      }
+    }
   </script>
 </body>
 </html>
