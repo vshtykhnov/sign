@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Draw Signature</title>
+  <style>
+    #signatureCanvas {
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+<body>
+  <h1>Draw your signature</h1>
+  <canvas id="signatureCanvas" width="500" height="200"></canvas>
+  <button id="saveButton">Save</button>
+  <script>
+    const canvas = document.getElementById('signatureCanvas');
+    const context = canvas.getContext('2d');
+    let drawing = false;
+
+    canvas.addEventListener('mousedown', () => {
+      drawing = true;
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      drawing = false;
+      context.beginPath();
+    });
+
+    canvas.addEventListener('mousemove', draw);
+
+    function draw(event) {
+      if (!drawing) return;
+      context.lineWidth = 2;
+      context.lineCap = 'round';
+      context.strokeStyle = '#000';
+      context.lineTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
+      context.stroke();
+      context.beginPath();
+      context.moveTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
+    }
+
+    document.getElementById('saveButton').addEventListener('click', () => {
+      const dataURL = canvas.toDataURL();
+      // Send dataURL to server or handle it here
+      console.log(dataURL); // For testing purposes
+    });
+  </script>
+</body>
+</html>
