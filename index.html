@@ -27,6 +27,9 @@
       width: 90%;
       max-width: 400px;
       text-align: center;
+      -webkit-appearance: none; /* Reset default styles for Safari */
+      -moz-appearance: none;
+      appearance: none;
     }
     .button + .button {
       margin-top: 10px;
@@ -35,14 +38,14 @@
       width: 100%;
       max-width: 400px;
       margin-top: 10px;
-      font-size: 18px; /* Larger text for the output */
-      padding: 10px; /* Padding for better readability */
+      font-size: 18px;
+      padding: 10px;
       box-sizing: border-box;
     }
 
     /* Styles for Safari */
     @media not all and (min-resolution:.001dpcm) { 
-      @supports (-webkit-appearance:none) {
+      @supports (-webkit-appearance:none) and (stroke-color:transparent) {
         .button {
           font-size: 28px; /* Larger text for buttons on Safari */
           padding: 25px 50px; /* Larger padding for buttons on Safari */
@@ -70,7 +73,6 @@
       if (signaturePad.isEmpty()) {
         alert("Please provide a signature first.");
       } else {
-        // Get SVG data
         const dataURL = signaturePad.toDataURL('image/svg+xml');
         const blob = new Blob([dataURL], { type: 'image/svg+xml' });
 
