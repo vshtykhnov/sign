@@ -75,15 +75,16 @@
     }
 
     function draw() {
-      if (mouseIsPressed || touches.length > 0) {
+      if (mouseIsPressed) {
         drawingStarted = true;
-        if (touches.length > 0) {
-          for (let i = 0; i < touches.length; i++) {
-            const touch = touches[i];
-            line(touch.px, touch.py, touch.x, touch.y);
-          }
-        } else {
-          line(pmouseX, pmouseY, mouseX, mouseY);
+        line(pmouseX, pmouseY, mouseX, mouseY);
+      }
+
+      if (touches.length > 0) {
+        for (let i = 0; i < touches.length; i++) {
+          drawingStarted = true;
+          const touch = touches[i];
+          line(touch.px, touch.py, touch.x, touch.y);
         }
       }
     }
