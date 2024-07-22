@@ -15,7 +15,7 @@
     }
     #signatureCanvas {
       border: 1px solid #000;
-      touch-action: none; /* Предотвращает прокрутку страницы при рисовании */
+      touch-action: none; /* Prevent scrolling when drawing */
       width: 100%;
       height: 70vh;
     }
@@ -29,6 +29,7 @@
       text-align: center;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 </head>
 <body>
   <h1>Draw your signature</h1>
@@ -37,79 +38,35 @@
   <button id="clearButton" class="button">Clear</button>
   <script>
     const canvas = document.getElementById('signatureCanvas');
-    const context = canvas.getContext('2d');
-    let drawing = false;
+    const signaturePad = new SignaturePad(canvas, {
+      backgroundColor: 'rgb(255, 255, 255)'
+    });
 
     // Resize the canvas to fit the window
     function resizeCanvas() {
-      canvas.width = window.innerWidth * 0.9;
-      canvas.height = window.innerHeight * 0.7;
-      drawSignatureLine(); // Draw the signature line after resizing
+      const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width = canvas.offsetWidth * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      canvas.getContext("2d").scale(ratio, ratio);
+      signaturePad.clear(); // otherwise isEmpty() might return incorrect value
     }
 
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    function drawSignatureLine() {
-      context.beginPath();
-      context.moveTo(0, canvas.height / 2);
-      context.lineTo(canvas.width, canvas.height / 2);
-      context.strokeStyle = '#ddd';
-      context.stroke();
-      context.beginPath();
-    }
-
-    // Адаптируем для мобильных устройств
-    canvas.addEventListener('touchstart', (event) => {
-      drawing = true;
-      draw(event.touches[0]);
-    });
-
-    canvas.addEventListener('touchend', () => {
-      drawing = false;
-      context.beginPath();
-    });
-
-    canvas.addEventListener('touchmove', (event) => {
-      draw(event.touches[0]);
-    });
-
-    // Поддержка рисования мышью
-    canvas.addEventListener('mousedown', (event) => {
-      drawing = true;
-      draw(event);
-    });
-    canvas.addEventListener('mouseup', () => {
-      drawing = false;
-      context.beginPath();
-    });
-    canvas.addEventListener('mousemove', draw);
-
-    function draw(event) {
-      if (!drawing) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left || event.touches[0].clientX - rect.left;
-      const y = event.clientY - rect.top || event.touches[0].clientY - rect.top;
-      
-      context.lineWidth = 2;
-      context.lineCap = 'round';
-      context.strokeStyle = '#000';
-      context.lineTo(x, y);
-      context.stroke();
-      context.beginPath();
-      context.moveTo(x, y);
-    }
-
     document.getElementById('copyButton').addEventListener('click', () => {
-      const dataURL = canvas.toDataURL();
-      const svg = convertToSVG(dataURL);
-      copyToClipboard(svg);
-      alert('SVG copied to clipboard');
+      if (signaturePad.isEmpty()) {
+        alert("Please provide a signature first.");
+      } else {
+        const dataURL = signaturePad.toDataURL();
+        const svg = convertToSVG(dataURL);
+        copyToClipboard(svg);
+        alert('SVG copied to clipboard');
+      }
     });
 
     document.getElementById('clearButton').addEventListener('click', () => {
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      drawSignatureLine();
+      signaturePad.clear();
     });
 
     function convertToSVG(dataURL) {
@@ -131,9 +88,6 @@
       document.execCommand('copy');
       document.body.removeChild(textarea);
     }
-
-    // Draw the initial signature line
-    drawSignatureLine();
   </script>
 </body>
 </html>
