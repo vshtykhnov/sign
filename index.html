@@ -70,8 +70,9 @@
       if (signaturePad.isEmpty()) {
         alert("Please provide a signature first.");
       } else {
-        const dataURL = signaturePad.toDataURL('image/svg+xml');
-        const blob = new Blob([dataURL], { type: 'image/svg+xml' });
+        // Ensure consistent SVG output size
+        const svgData = signaturePad.toDataURL('image/svg+xml');
+        const blob = new Blob([svgData], { type: 'image/svg+xml' });
 
         const formData = new FormData();
         formData.append('file', blob, 'signature.svg');
